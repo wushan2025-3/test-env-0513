@@ -1,7 +1,18 @@
-export default {
-  async fetch(request, context, env) {
-    const TESAT_B = env.TESAT_B;
+const html = `<!DOCTYPE html>
+<body>
+  <h1>Hello World测试的edge function</h1>
+</body>`
 
-    return new Response(`Get TEST_KEY_PLAIN: ${TESAT_B} successfully!`);
-  },
+async function handleRequest(request) {
+  return new Response(html, {
+    headers: {
+      "content-type": "text/html;charset=UTF-8",
+    },
+  })
+}
+
+export default {
+  async fetch(request) {
+    return handleRequest(request);
+  }
 };
