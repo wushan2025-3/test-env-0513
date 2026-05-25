@@ -3,6 +3,6 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build",
  "entry": "/index.js",
-"edgeFunctionFirst": ["/edge/*", "/api/v?/*", "!/api/beta/*"]
+"edgeFunctionFirst": ["/edge/*"]
 
 }
