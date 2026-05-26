@@ -7,5 +7,5 @@
     "directory": "/src/assets",
     "notFoundStrategy": "singlePageApplication"
   },
-"edgeFunctionFirst": ["/api/","!/api/beta/*"]
+"edgeFunctionFirst": ["/api/中文测试"]
 }
