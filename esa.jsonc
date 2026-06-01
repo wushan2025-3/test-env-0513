@@ -2,8 +2,4 @@
   "name": "vite-vue-template",
   "installCommand": "npm install",
   "buildCommand": "npm run build",
-"assets": {
-    "directory": "/src/assets",
-    "notFoundStrategy": "singlePageApplication"
-  },
 }
