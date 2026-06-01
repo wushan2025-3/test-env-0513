@@ -2,7 +2,8 @@
   "name": "vite-vue-template",
   "installCommand": "npm install",
   "buildCommand": "npm run build",
- "entry": "/index.js",
-//"edgeFunctionFirst": ["/api/test?test=33"]
-"edgeFunctionFirst": ["/api/hello"]
+"assets": {
+    "directory": "/src/assets",
+    "notFoundStrategy": "singlePageApplication"
+  },
 }
