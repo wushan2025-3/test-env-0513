@@ -3,9 +3,5 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build",
   "entry": "/index.js",
- "assets": {
-    "directory": "/src/assets",
-    "notFoundStrategy": "singlePageApplication"
-  },
-//"edgeFunctionFirst": ["/api/?test222!/"]
+ "edgeFunctionFirst": ["/api/test/"]
 }
