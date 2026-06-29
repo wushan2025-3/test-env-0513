@@ -11,8 +11,12 @@ async function handleRequest(request) {
   })
 }
 
+async function handleAssetsFetch(request, env) {
+  return await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/test.txt");
+}
+
 export default {
-  async fetch(request) {
-    return handleRequest(request);
+  async fetch(request, env) {
+    return handleAssetsFetch(request, env);
   }
 };
