@@ -18,12 +18,15 @@ export default {
         headers: { "Sec-Fetch-Mode": "navigate" }
       });
       const text = await resp.text();
+      const isEsaErrorPage = text.includes("error-page") || text.includes("__ESA_ERROR_PAGE_INFO");
+      const isIndexHtml = !isEsaErrorPage && (text.includes("<!DOCTYPE") || text.includes("<html"));
       return new Response(JSON.stringify({
         test: "Sec-Fetch-Mode: navigate → SPA fallback",
         description: "子请求携带 Sec-Fetch-Mode: navigate 请求不存在的路径，验证是否触发 SPA 兜底返回 index.html",
         status: resp.status,
         contentType: resp.headers.get("content-type"),
-        isIndexHtml: text.includes("<!DOCTYPE") || text.includes("<!doctype") || text.includes("<div id"),
+        isIndexHtml,
+        isEsaErrorPage,
         body: text.substring(0, 500)
       }, null, 2), { headers: { "content-type": "application/json" } });
     }
