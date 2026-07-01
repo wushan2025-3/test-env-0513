@@ -26,11 +26,13 @@ export default {
       const text = await resp.text();
       const isEsaErrorPage = text.includes("error-page") || text.includes("__ESA_ERROR_PAGE_INFO");
       const isIndexHtml = !isEsaErrorPage && (text.includes("<!DOCTYPE") || text.includes("<html"));
+      const respHeaders = headersToObj(resp.headers);
+      console.log("[404] sub-request headers:", JSON.stringify(respHeaders));
       return new Response(JSON.stringify({
         test: "Sec-Fetch-Mode: navigate → SPA fallback",
         description: "子请求携带 Sec-Fetch-Mode: navigate 请求不存在的路径，验证是否触发 SPA 兜底返回 index.html",
         status: resp.status,
-        headers: headersToObj(resp.headers),
+        headers: respHeaders,
         contentType: resp.headers.get("content-type"),
         isIndexHtml,
         isEsaErrorPage,
@@ -44,11 +46,13 @@ export default {
         headers: { "If-None-Match": '"fake-etag-wrong"' }
       });
       const text = await resp.text();
+      const respHeaders = headersToObj(resp.headers);
+      console.log("[noetag] sub-request headers:", JSON.stringify(respHeaders));
       return new Response(JSON.stringify({
         test: "If-None-Match ETag not match",
         description: "携带错误的 ETag，期望返回 200（不匹配，正常返回内容）",
         status: resp.status,
-        headers: headersToObj(resp.headers),
+        headers: respHeaders,
         etag: resp.headers.get("etag"),
         contentType: resp.headers.get("content-type"),
         body: text.substring(0, 500)
@@ -65,12 +69,14 @@ export default {
       const r2 = await env.Assets.fetch(testUrl, {
         headers: { "If-None-Match": realEtag }
       });
+      const r2Headers = headersToObj(r2.headers);
+      console.log("[etag] sub-request headers:", JSON.stringify(r2Headers));
       return new Response(JSON.stringify({
         test: "If-None-Match ETag match",
         description: "先子请求获取真实 ETag，再用它发起请求，期望返回 304",
         realEtag: realEtag,
         status: r2.status,
-        headers: headersToObj(r2.headers),
+        headers: r2Headers,
         contentType: r2.headers.get("content-type"),
         pass: r2.status === 304
       }, null, 2), { headers: { "content-type": "application/json" } });
@@ -81,11 +87,13 @@ export default {
       const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/helloer.html", {
         redirect: "manual"
       });
+      const respHeaders = headersToObj(resp.headers);
+      console.log("[manual] sub-request headers:", JSON.stringify(respHeaders));
       return new Response(JSON.stringify({
         test: "redirect: manual (do not follow)",
         description: "请求 .html 文件触发 clean URL 重定向，manual 模式应返回原始 307",
         status: resp.status,
-        headers: headersToObj(resp.headers),
+        headers: respHeaders,
         location: resp.headers.get("location"),
         pass: resp.status === 307
       }, null, 2), { headers: { "content-type": "application/json" } });
@@ -97,11 +105,13 @@ export default {
         redirect: "follow"
       });
       const text = await resp.text();
+      const respHeaders = headersToObj(resp.headers);
+      console.log("[follow] sub-request headers:", JSON.stringify(respHeaders));
       return new Response(JSON.stringify({
         test: "redirect: follow (follow redirect)",
         description: "请求 .html 文件触发 clean URL 重定向，follow 模式应跟随并返回 200",
         status: resp.status,
-        headers: headersToObj(resp.headers),
+        headers: respHeaders,
         contentType: resp.headers.get("content-type"),
         body: text.substring(0, 500),
         pass: resp.status === 200
