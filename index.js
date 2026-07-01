@@ -2,7 +2,7 @@
 export default {
   async fetch(request, context, env) {
     const url = new URL(request.url);
-    const subUrl = `${url.protocol}//${url.host}/test.txt`;
+    const subUrl = `${url.protocol}//${url.host}/123in21dex.html`;
 
     try {
       const resp = await env.Assets.fetch(subUrl, {
