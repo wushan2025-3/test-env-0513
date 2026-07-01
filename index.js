@@ -8,6 +8,12 @@
 //   manual   → redirect: manual 不跟随重定向 → 期望 307
 //   follow   → redirect: follow 跟随重定向   → 期望 200
 
+function headersToObj(headers) {
+  const obj = {};
+  for (const [k, v] of headers.entries()) obj[k] = v;
+  return obj;
+}
+
 export default {
   async fetch(request, context, env) {
     const testCase = request.headers.get("X-Test-Case") || "default";
@@ -24,6 +30,7 @@ export default {
         test: "Sec-Fetch-Mode: navigate → SPA fallback",
         description: "子请求携带 Sec-Fetch-Mode: navigate 请求不存在的路径，验证是否触发 SPA 兜底返回 index.html",
         status: resp.status,
+        headers: headersToObj(resp.headers),
         contentType: resp.headers.get("content-type"),
         isIndexHtml,
         isEsaErrorPage,
@@ -41,6 +48,7 @@ export default {
         test: "If-None-Match ETag not match",
         description: "携带错误的 ETag，期望返回 200（不匹配，正常返回内容）",
         status: resp.status,
+        headers: headersToObj(resp.headers),
         etag: resp.headers.get("etag"),
         contentType: resp.headers.get("content-type"),
         body: text.substring(0, 500)
@@ -62,6 +70,7 @@ export default {
         description: "先子请求获取真实 ETag，再用它发起请求，期望返回 304",
         realEtag: realEtag,
         status: r2.status,
+        headers: headersToObj(r2.headers),
         contentType: r2.headers.get("content-type"),
         pass: r2.status === 304
       }, null, 2), { headers: { "content-type": "application/json" } });
@@ -76,6 +85,7 @@ export default {
         test: "redirect: manual (do not follow)",
         description: "请求 .html 文件触发 clean URL 重定向，manual 模式应返回原始 307",
         status: resp.status,
+        headers: headersToObj(resp.headers),
         location: resp.headers.get("location"),
         pass: resp.status === 307
       }, null, 2), { headers: { "content-type": "application/json" } });
@@ -91,6 +101,7 @@ export default {
         test: "redirect: follow (follow redirect)",
         description: "请求 .html 文件触发 clean URL 重定向，follow 模式应跟随并返回 200",
         status: resp.status,
+        headers: headersToObj(resp.headers),
         contentType: resp.headers.get("content-type"),
         body: text.substring(0, 500),
         pass: resp.status === 200
