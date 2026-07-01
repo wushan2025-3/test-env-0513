@@ -11,7 +11,6 @@
 export default {
   async fetch(request, context, env) {
     const testCase = request.headers.get("X-Test-Case") || "default";
-    const realEtag = context.get("ETag") || "null";
 
     // ===== 404: Sec-Fetch-Mode: navigate 触发 SPA 兜底 =====
     if (testCase === "404") {
@@ -47,13 +46,17 @@ export default {
 
     // ===== etag: If-None-Match ETag 匹配 =====
     if (testCase === "etag") {
-      // 用真实 ETag 再次请求同一资源
-      const r2 = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/test.txt", {
+      const testUrl = "http://xxx.er.xxxtest.alicdn-test.com/test.txt";
+      // 先 fetch 资源拿真实 ETag
+      const r1 = await env.Assets.fetch(testUrl);
+      const realEtag = r1.headers.get("etag") || "";
+      // 用真实 ETag 再次请求
+      const r2 = await env.Assets.fetch(testUrl, {
         headers: { "If-None-Match": realEtag }
       });
       return new Response(JSON.stringify({
         test: "If-None-Match ETag match",
-        description: "从主请求 context 获取真实 ETag，再用它发起子请求，期望返回 304",
+        description: "先子请求获取真实 ETag，再用它发起请求，期望返回 304",
         realEtag: realEtag,
         status: r2.status,
         contentType: r2.headers.get("content-type"),
