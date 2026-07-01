@@ -1,33 +1,102 @@
-// 1.1.1.1 主请求fetch本ESA域名 - Sec-Fetch-Mode: navigate 头透传验证
+// ESA EdgeWorker 子请求综合测试脚本
+// 通过主请求自定义头 X-Test-Case 切换测试场景，部署一次即可覆盖所有用例
+//
+// 用法：curl -H 'X-Test-Case: <case>' 'http://域名/任意路径?_dyc=1' -x VIP:端口
+//   404      → SPA 兜底（not_found_handling）
+//   noetag   → If-None-Match ETag 不匹配 → 期望 200
+//   etag     → If-None-Match ETag 匹配   → 期望 304
+//   manual   → redirect: manual 不跟随重定向 → 期望 307
+//   follow   → redirect: follow 跟随重定向   → 期望 200
+
 export default {
   async fetch(request, context, env) {
-    const url = new URL(request.url);
-    const subUrl = `${url.protocol}//${url.host}/123in21dex.html`;
+    const testCase = request.headers.get("X-Test-Case") || "default";
+    const realEtag = context.get("ETag") || "null";
 
-    try {
-      const resp = await env.Assets.fetch(subUrl, {
-        headers: {
-          "Sec-Fetch-Mode": "navigate",
-        },
+    // ===== 404: Sec-Fetch-Mode: navigate 触发 SPA 兜底 =====
+    if (testCase === "404") {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/notfound.html", {
+        headers: { "Sec-Fetch-Mode": "navigate" }
       });
       const text = await resp.text();
       return new Response(JSON.stringify({
-        test: "Sec-Fetch-Mode: navigate 透传验证",
-        description: "子请求携带 Sec-Fetch-Mode: navigate 头，验证是否透传到源站",
-        subRequestUrl: subUrl,
+        test: "Sec-Fetch-Mode: navigate → SPA fallback",
+        description: "子请求携带 Sec-Fetch-Mode: navigate 请求不存在的路径，验证是否触发 SPA 兜底返回 index.html",
         status: resp.status,
+        contentType: resp.headers.get("content-type"),
+        isIndexHtml: text.includes("<!DOCTYPE") || text.includes("<!doctype") || text.includes("<div id"),
+        body: text.substring(0, 500)
+      }, null, 2), { headers: { "content-type": "application/json" } });
+    }
+
+    // ===== noetag: If-None-Match ETag 不匹配 =====
+    if (testCase === "noetag") {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/test.txt", {
+        headers: { "If-None-Match": '"fake-etag-wrong"' }
+      });
+      const text = await resp.text();
+      return new Response(JSON.stringify({
+        test: "If-None-Match ETag not match",
+        description: "携带错误的 ETag，期望返回 200（不匹配，正常返回内容）",
+        status: resp.status,
+        etag: resp.headers.get("etag"),
         contentType: resp.headers.get("content-type"),
         body: text.substring(0, 500)
       }, null, 2), { headers: { "content-type": "application/json" } });
-    } catch (e) {
-      return new Response(JSON.stringify({
-        test: "Sec-Fetch-Mode: navigate 透传验证",
-        error: e.message,
-        success: false,
-      }, null, 2), {
-        status: 500,
-        headers: { "content-type": "application/json" },
-      });
     }
+
+    // ===== etag: If-None-Match ETag 匹配 =====
+    if (testCase === "etag") {
+      // 用真实 ETag 再次请求同一资源
+      const r2 = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/test.txt", {
+        headers: { "If-None-Match": realEtag }
+      });
+      return new Response(JSON.stringify({
+        test: "If-None-Match ETag match",
+        description: "从主请求 context 获取真实 ETag，再用它发起子请求，期望返回 304",
+        realEtag: realEtag,
+        status: r2.status,
+        contentType: r2.headers.get("content-type"),
+        pass: r2.status === 304
+      }, null, 2), { headers: { "content-type": "application/json" } });
+    }
+
+    // ===== manual: redirect manual 不跟随重定向 =====
+    if (testCase === "manual") {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/helloer.html", {
+        redirect: "manual"
+      });
+      return new Response(JSON.stringify({
+        test: "redirect: manual (do not follow)",
+        description: "请求 .html 文件触发 clean URL 重定向，manual 模式应返回原始 307",
+        status: resp.status,
+        location: resp.headers.get("location"),
+        pass: resp.status === 307
+      }, null, 2), { headers: { "content-type": "application/json" } });
+    }
+
+    // ===== follow: redirect follow 跟随重定向 =====
+    if (testCase === "follow") {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/helloer.html", {
+        redirect: "follow"
+      });
+      const text = await resp.text();
+      return new Response(JSON.stringify({
+        test: "redirect: follow (follow redirect)",
+        description: "请求 .html 文件触发 clean URL 重定向，follow 模式应跟随并返回 200",
+        status: resp.status,
+        contentType: resp.headers.get("content-type"),
+        body: text.substring(0, 500),
+        pass: resp.status === 200
+      }, null, 2), { headers: { "content-type": "application/json" } });
+    }
+
+    // ===== default: 未匹配到任何测试场景 =====
+    return new Response(JSON.stringify({
+      test: "unknown or missing X-Test-Case",
+      description: "请在 curl 中通过 -H 'X-Test-Case: <case>' 指定测试场景",
+      availableCases: ["404", "noetag", "etag", "manual", "follow"],
+      received: testCase
+    }, null, 2), { headers: { "content-type": "application/json" } });
   },
 };
