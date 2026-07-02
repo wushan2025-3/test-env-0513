@@ -5,7 +5,7 @@
   "entry": "/index.js",
  "assets": {
     "directory": "/src/assets",
-    "notFoundStrategy": "404Page"
+    "notFoundStrategy": "singlePageApplication"
   },
 "edgeFunctionFirst": ["/api/er/*","!/api/beta/*"]
 }
