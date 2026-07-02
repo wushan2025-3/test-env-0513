@@ -14,6 +14,25 @@ function headersToObj(headers) {
   return obj;
 }
 
+// 从响应头提取实际回源信息
+function getOriginInfo(headers) {
+  const info = {
+    originHost: headers.get("x-debug-dprs-origin-host") || null,
+    originScheme: headers.get("x-debug-dprs-origin-scheme") || null,
+    originPath: null
+  };
+  // 解码 OSS canonical request 提取实际路径
+  const canonical = headers.get("x-debug-dprs-oss-canonical-request");
+  if (canonical) {
+    try {
+      const decoded = atob(canonical);
+      const lines = decoded.split("\n");
+      if (lines.length >= 2) info.originPath = lines[1].trim();
+    } catch (e) { /* ignore */ }
+  }
+  return info;
+}
+
 export default {
   async fetch(request, context, env) {
     const testCase = request.headers.get("X-Test-Case") || "default";
@@ -27,11 +46,13 @@ export default {
       const isEsaErrorPage = text.includes("error-page") || text.includes("__ESA_ERROR_PAGE_INFO");
       const isIndexHtml = !isEsaErrorPage && (text.includes("<!DOCTYPE") || text.includes("<html"));
       const respHeaders = headersToObj(resp.headers);
-      console.log("[404] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
+      const originInfo = getOriginInfo(resp.headers);
+      console.log("[404] sub-request finalUrl:", resp.url, "originInfo:", JSON.stringify(originInfo));
       return new Response(JSON.stringify({
         test: "Sec-Fetch-Mode: navigate → SPA fallback",
         description: "子请求携带 Sec-Fetch-Mode: navigate 请求不存在的路径，验证是否触发 SPA 兜底返回 index.html",
         finalUrl: resp.url,
+        originInfo,
         status: resp.status,
         headers: respHeaders,
         contentType: resp.headers.get("content-type"),
@@ -50,11 +71,13 @@ export default {
       const isEsaErrorPage = text.includes("error-page") || text.includes("__ESA_ERROR_PAGE_INFO");
       const isIndexHtml = !isEsaErrorPage && (text.includes("<!DOCTYPE") || text.includes("<html"));
       const respHeaders = headersToObj(resp.headers);
-      console.log("[404] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
+      const originInfo = getOriginInfo(resp.headers);
+      console.log("[404cors] sub-request finalUrl:", resp.url, "originInfo:", JSON.stringify(originInfo));
       return new Response(JSON.stringify({
         test: "Sec-Fetch-Mode: cors",
         description: "子请求携带 Sec-Fetch-Mode: cors 请求不存在的路径，验证是否触发 SPA 兜底返回 index.html",
         finalUrl: resp.url,
+        originInfo,
         status: resp.status,
         headers: respHeaders,
         contentType: resp.headers.get("content-type"),
@@ -73,11 +96,13 @@ export default {
       const isEsaErrorPage = text.includes("error-page") || text.includes("__ESA_ERROR_PAGE_INFO");
       const isIndexHtml = !isEsaErrorPage && (text.includes("<!DOCTYPE") || text.includes("<html"));
       const respHeaders = headersToObj(resp.headers);
-      console.log("[404] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
+      const originInfo = getOriginInfo(resp.headers);
+      console.log("[404none] sub-request finalUrl:", resp.url, "originInfo:", JSON.stringify(originInfo));
       return new Response(JSON.stringify({
         test: "Sec-Fetch-Mode: 空 → SPA fallback",
         description: "子请求携带 Sec-Fetch-Mode: 空 请求不存在的路径，验证是否触发 SPA 兜底返回 index.html",
         finalUrl: resp.url,
+        originInfo,
         status: resp.status,
         headers: respHeaders,
         contentType: resp.headers.get("content-type"),
@@ -94,11 +119,13 @@ export default {
       });
       const text = await resp.text();
       const respHeaders = headersToObj(resp.headers);
-      console.log("[noetag] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
+      const originInfo = getOriginInfo(resp.headers);
+      console.log("[noetag] sub-request finalUrl:", resp.url, "originInfo:", JSON.stringify(originInfo));
       return new Response(JSON.stringify({
         test: "If-None-Match ETag not match",
         description: "携带错误的 ETag，期望返回 200（不匹配，正常返回内容）",
         finalUrl: resp.url,
+        originInfo,
         status: resp.status,
         headers: respHeaders,
         etag: resp.headers.get("etag"),
@@ -119,12 +146,16 @@ export default {
         headers: { "If-None-Match": realEtag }
       });
       const r2Headers = headersToObj(r2.headers);
-      console.log("[etag] r1 finalUrl:", r1.url, "r2 finalUrl:", r2.url, "r2 headers:", JSON.stringify(r2Headers));
+      const r1Origin = getOriginInfo(r1.headers);
+      const r2Origin = getOriginInfo(r2.headers);
+      console.log("[etag] r1 finalUrl:", r1.url, "r1Origin:", JSON.stringify(r1Origin), "r2 finalUrl:", r2.url, "r2Origin:", JSON.stringify(r2Origin));
       return new Response(JSON.stringify({
         test: "If-None-Match ETag match",
         description: "先子请求获取真实 ETag，再用它发起请求，期望返回 304",
         r1FinalUrl: r1.url,
+        r1OriginInfo: r1Origin,
         r2FinalUrl: r2.url,
+        r2OriginInfo: r2Origin,
         realEtag: realEtag,
         status: r2.status,
         headers: r2Headers,
@@ -139,11 +170,13 @@ export default {
         redirect: "manual"
       });
       const respHeaders = headersToObj(resp.headers);
-      console.log("[manual] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
+      const originInfo = getOriginInfo(resp.headers);
+      console.log("[manual] sub-request finalUrl:", resp.url, "originInfo:", JSON.stringify(originInfo));
       return new Response(JSON.stringify({
         test: "redirect: manual (do not follow)",
         description: "请求 .html 文件触发 clean URL 重定向，manual 模式应返回原始 307",
         finalUrl: resp.url,
+        originInfo,
         status: resp.status,
         headers: respHeaders,
         location: resp.headers.get("location"),
@@ -158,11 +191,13 @@ export default {
       });
       const text = await resp.text();
       const respHeaders = headersToObj(resp.headers);
-      console.log("[follow] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
+      const originInfo = getOriginInfo(resp.headers);
+      console.log("[follow] sub-request finalUrl:", resp.url, "originInfo:", JSON.stringify(originInfo));
       return new Response(JSON.stringify({
         test: "redirect: follow (follow redirect)",
         description: "请求 .html 文件触发 clean URL 重定向，follow 模式应跟随并返回 200",
         finalUrl: resp.url,
+        originInfo,
         status: resp.status,
         headers: respHeaders,
         contentType: resp.headers.get("content-type"),
