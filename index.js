@@ -64,7 +64,7 @@ export default {
 
     // ===== 404: Sec-Fetch-Mode: navigate 触发 SPA 兜底 =====
     if (testCase === "404") {
-      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/notfound.html?_dyc=1", {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/sub/?_dyc=1", {
         headers: { "Sec-Fetch-Mode": "navigate" }
       });
       const text = await resp.text();
@@ -89,7 +89,7 @@ export default {
 
     // ===== 404cors: Sec-Fetch-Mode: cors 触发 SPA 兜底 =====
     if (testCase === "404cors") {
-      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/notfound.html?_dyc=1", {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/sub/?_dyc=1", {
         headers: { "Sec-Fetch-Mode": "cors" }
       });
       const text = await resp.text();
@@ -114,7 +114,7 @@ export default {
 
     // ===== 404none: Sec-Fetch-Mode:  触发 SPA 兜底 =====
     if (testCase === "404none") {
-      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/notfound.html?_dyc=1", {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/sub/?_dyc=1", {
         headers: { "Sec-Fetch-Mode": "" }
       });
       const text = await resp.text();
@@ -139,7 +139,7 @@ export default {
 
     // ===== noetag: If-None-Match ETag 不匹配 =====
     if (testCase === "noetag") {
-      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/notfound.html?_dyc=1", {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/sub/?_dyc=1", {
         headers: { "If-None-Match": '"fake-etag-wrong"' }
       });
       const text = await resp.text();
@@ -161,8 +161,8 @@ export default {
 
     // ===== etag: If-None-Match ETag 匹配 =====
     if (testCase === "etag") {
-      const testUrl1 = "http://xxx.er.xxxtest.alicdn-test.com/test.txt?_dyc=1";
-      const testUrl2 = "http://xxx.er.xxxtest.alicdn-test.com/notfound.html?_dyc=1";
+      const testUrl1 = "http://xxx.er.xxxtest.alicdn-test.com/sub/index.html?_dyc=1";
+      const testUrl2 = "http://xxx.er.xxxtest.alicdn-test.com/sub/?_dyc=1";
       // 先 fetch 资源拿真实 ETag
       const r1 = await env.Assets.fetch(testUrl1);
       const realEtag = r1.headers.get("etag") || "";
