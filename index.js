@@ -20,7 +20,7 @@ export default {
 
     // ===== 404: Sec-Fetch-Mode: navigate 触发 SPA 兜底 =====
     if (testCase === "404") {
-      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/notfound.html", {1
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/notfound.html", {
         headers: { "Sec-Fetch-Mode": "navigate" }
       });
       const text = await resp.text();
