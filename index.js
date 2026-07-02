@@ -64,7 +64,7 @@ export default {
 
     // ===== 404: Sec-Fetch-Mode: navigate 触发 SPA 兜底 =====
     if (testCase === "404") {
-      const resp = await env.Assets.fetch("https://xxx.er.xxxtest.alicdn-test.com/notfound.html?_dyc=1", {
+      const resp = await env.Assets.fetch("http://other.com/notfound.html?_dyc=1", {
         headers: { "Sec-Fetch-Mode": "navigate" }
       });
       const text = await resp.text();
@@ -161,8 +161,8 @@ export default {
 
     // ===== etag: If-None-Match ETag 匹配 =====
     if (testCase === "etag") {
-      const testUrl1 = "http://xxx.er.xxxtest.alicdn-test.com/test.txt?_dyc=1";
-      const testUrl2 = "http://other.com/test.txt?_dyc=1";
+      const testUrl1 = "https://xxx.er.xxxtest.alicdn-test.com/test.txt?_dyc=1";
+      const testUrl2 = "http://xxx.er.xxxtest.alicdn-test.com/test.txt?_dyc=1";
       // 先 fetch 资源拿真实 ETag
       const r1 = await env.Assets.fetch(testUrl1);
       const realEtag = r1.headers.get("etag") || "";
