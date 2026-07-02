@@ -63,8 +63,8 @@ export default {
 
     // ===== etag: If-None-Match ETag 匹配 =====
     if (testCase === "etag") {
-      const testUrl1 = "http://xxx.er.xxxtest.alicdn-test.com/1d2/saas.txt";
-      const testUrl2 = "https://aaa.com/test.txt";
+      const testUrl1 = "http://xxx.er.xxxtest.alicdn-test.com/test.txt";
+      const testUrl2 = "http://xxx.er.xxxtest.alicdn-test.com/test.txt";
       // 先 fetch 资源拿真实 ETag
       const r1 = await env.Assets.fetch(testUrl1);
       const realEtag = r1.headers.get("etag") || "";
