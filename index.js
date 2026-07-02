@@ -191,7 +191,7 @@ export default {
 
     // ===== manual: redirect manual 不跟随重定向 =====
     if (testCase === "manual") {
-      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/sub?_dyc=1", {
+      const resp = await env.Assets.fetch("https://xxx.er.xxxtest.alicdn-test.com/sub?_dyc=1", {
         redirect: "manual"
       });
       const respHeaders = headersToObj(resp.headers);
