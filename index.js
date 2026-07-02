@@ -63,12 +63,13 @@ export default {
 
     // ===== etag: If-None-Match ETag 匹配 =====
     if (testCase === "etag") {
-      const testUrl = "http://xxx.er.xxxtest.alicdn-test.com/test.txt";
+      const testUrl1 = "http://xxx.er.xxxtest.alicdn-test.com/1d2/saas.txt";
+      const testUrl2 = "https://aaa.com/test.txt";
       // 先 fetch 资源拿真实 ETag
-      const r1 = await env.Assets.fetch(testUrl);
+      const r1 = await env.Assets.fetch(testUrl1);
       const realEtag = r1.headers.get("etag") || "";
       // 用真实 ETag 再次请求
-      const r2 = await env.Assets.fetch(testUrl, {
+      const r2 = await env.Assets.fetch(testUrl2, {
         headers: { "If-None-Match": realEtag }
       });
       const r2Headers = headersToObj(r2.headers);
