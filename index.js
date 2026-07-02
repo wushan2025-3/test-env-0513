@@ -20,7 +20,7 @@ export default {
 
     // ===== 404: Sec-Fetch-Mode: navigate 触发 SPA 兜底 =====
     if (testCase === "404") {
-      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/test.txt", {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/notfound.html", {
         headers: { "Sec-Fetch-Mode": "navigate" }
       });
       const text = await resp.text();
@@ -41,9 +41,55 @@ export default {
       }, null, 2), { headers: { "content-type": "application/json" } });
     }
 
+    // ===== 404cors: Sec-Fetch-Mode: cors 触发 SPA 兜底 =====
+    if (testCase === "404cors") {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/notfound.html", {
+        headers: { "Sec-Fetch-Mode": "cors" }
+      });
+      const text = await resp.text();
+      const isEsaErrorPage = text.includes("error-page") || text.includes("__ESA_ERROR_PAGE_INFO");
+      const isIndexHtml = !isEsaErrorPage && (text.includes("<!DOCTYPE") || text.includes("<html"));
+      const respHeaders = headersToObj(resp.headers);
+      console.log("[404] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
+      return new Response(JSON.stringify({
+        test: "Sec-Fetch-Mode: cors",
+        description: "子请求携带 Sec-Fetch-Mode: cors 请求不存在的路径，验证是否触发 SPA 兜底返回 index.html",
+        finalUrl: resp.url,
+        status: resp.status,
+        headers: respHeaders,
+        contentType: resp.headers.get("content-type"),
+        isIndexHtml,
+        isEsaErrorPage,
+        body: text.substring(0, 500)
+      }, null, 2), { headers: { "content-type": "application/json" } });
+    }
+
+    // ===== 404none: Sec-Fetch-Mode:  触发 SPA 兜底 =====
+    if (testCase === "404none") {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/notfound.html", {
+        headers: { "Sec-Fetch-Mode": "" }
+      });
+      const text = await resp.text();
+      const isEsaErrorPage = text.includes("error-page") || text.includes("__ESA_ERROR_PAGE_INFO");
+      const isIndexHtml = !isEsaErrorPage && (text.includes("<!DOCTYPE") || text.includes("<html"));
+      const respHeaders = headersToObj(resp.headers);
+      console.log("[404] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
+      return new Response(JSON.stringify({
+        test: "Sec-Fetch-Mode: 空 → SPA fallback",
+        description: "子请求携带 Sec-Fetch-Mode: 空 请求不存在的路径，验证是否触发 SPA 兜底返回 index.html",
+        finalUrl: resp.url,
+        status: resp.status,
+        headers: respHeaders,
+        contentType: resp.headers.get("content-type"),
+        isIndexHtml,
+        isEsaErrorPage,
+        body: text.substring(0, 500)
+      }, null, 2), { headers: { "content-type": "application/json" } });
+    }
+
     // ===== noetag: If-None-Match ETag 不匹配 =====
     if (testCase === "noetag") {
-      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/test.txt", {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/notfound.html", {
         headers: { "If-None-Match": '"fake-etag-wrong"' }
       });
       const text = await resp.text();
@@ -64,7 +110,7 @@ export default {
     // ===== etag: If-None-Match ETag 匹配 =====
     if (testCase === "etag") {
       const testUrl1 = "http://xxx.er.xxxtest.alicdn-test.com/test.txt";
-      const testUrl2 = "http://xxx.er.xxxtest.alicdn-test.com/test.txt";
+      const testUrl2 = "http://xxx.er.xxxtest.alicdn-test.com/notfound.html";
       // 先 fetch 资源拿真实 ETag
       const r1 = await env.Assets.fetch(testUrl1);
       const realEtag = r1.headers.get("etag") || "";
@@ -89,7 +135,7 @@ export default {
 
     // ===== manual: redirect manual 不跟随重定向 =====
     if (testCase === "manual") {
-      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/helloer.html", {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/sub/", {
         redirect: "manual"
       });
       const respHeaders = headersToObj(resp.headers);
@@ -107,7 +153,7 @@ export default {
 
     // ===== follow: redirect follow 跟随重定向 =====
     if (testCase === "follow") {
-      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/helloer.html", {
+      const resp = await env.Assets.fetch("http://xxx.er.xxxtest.alicdn-test.com/sub/", {
         redirect: "follow"
       });
       const text = await resp.text();
