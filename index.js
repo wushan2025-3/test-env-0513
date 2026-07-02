@@ -161,8 +161,8 @@ export default {
 
     // ===== etag: If-None-Match ETag 匹配 =====
     if (testCase === "etag") {
-      const testUrl1 = "http://xxx.er.xxxtest.alicdn-test.com/sub/index.html?_dyc=1";
-      const testUrl2 = "http://xxx.er.xxxtest.alicdn-test.com/sub?_dyc=1";
+      const testUrl1 = "http://xxx.er.xxxtest.alicdn-test.com/test.txt?_dyc=1";
+      const testUrl2 = "https://other.com/test.txt?_dyc=1";
       // 先 fetch 资源拿真实 ETag
       const r1 = await env.Assets.fetch(testUrl1);
       const realEtag = r1.headers.get("etag") || "";
