@@ -27,10 +27,11 @@ export default {
       const isEsaErrorPage = text.includes("error-page") || text.includes("__ESA_ERROR_PAGE_INFO");
       const isIndexHtml = !isEsaErrorPage && (text.includes("<!DOCTYPE") || text.includes("<html"));
       const respHeaders = headersToObj(resp.headers);
-      console.log("[404] sub-request headers:", JSON.stringify(respHeaders));
+      console.log("[404] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
       return new Response(JSON.stringify({
         test: "Sec-Fetch-Mode: navigate → SPA fallback",
         description: "子请求携带 Sec-Fetch-Mode: navigate 请求不存在的路径，验证是否触发 SPA 兜底返回 index.html",
+        finalUrl: resp.url,
         status: resp.status,
         headers: respHeaders,
         contentType: resp.headers.get("content-type"),
@@ -47,10 +48,11 @@ export default {
       });
       const text = await resp.text();
       const respHeaders = headersToObj(resp.headers);
-      console.log("[noetag] sub-request headers:", JSON.stringify(respHeaders));
+      console.log("[noetag] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
       return new Response(JSON.stringify({
         test: "If-None-Match ETag not match",
         description: "携带错误的 ETag，期望返回 200（不匹配，正常返回内容）",
+        finalUrl: resp.url,
         status: resp.status,
         headers: respHeaders,
         etag: resp.headers.get("etag"),
@@ -70,10 +72,12 @@ export default {
         headers: { "If-None-Match": realEtag }
       });
       const r2Headers = headersToObj(r2.headers);
-      console.log("[etag] sub-request headers:", JSON.stringify(r2Headers));
+      console.log("[etag] r1 finalUrl:", r1.url, "r2 finalUrl:", r2.url, "r2 headers:", JSON.stringify(r2Headers));
       return new Response(JSON.stringify({
         test: "If-None-Match ETag match",
         description: "先子请求获取真实 ETag，再用它发起请求，期望返回 304",
+        r1FinalUrl: r1.url,
+        r2FinalUrl: r2.url,
         realEtag: realEtag,
         status: r2.status,
         headers: r2Headers,
@@ -88,10 +92,11 @@ export default {
         redirect: "manual"
       });
       const respHeaders = headersToObj(resp.headers);
-      console.log("[manual] sub-request headers:", JSON.stringify(respHeaders));
+      console.log("[manual] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
       return new Response(JSON.stringify({
         test: "redirect: manual (do not follow)",
         description: "请求 .html 文件触发 clean URL 重定向，manual 模式应返回原始 307",
+        finalUrl: resp.url,
         status: resp.status,
         headers: respHeaders,
         location: resp.headers.get("location"),
@@ -106,10 +111,11 @@ export default {
       });
       const text = await resp.text();
       const respHeaders = headersToObj(resp.headers);
-      console.log("[follow] sub-request headers:", JSON.stringify(respHeaders));
+      console.log("[follow] sub-request finalUrl:", resp.url, "headers:", JSON.stringify(respHeaders));
       return new Response(JSON.stringify({
         test: "redirect: follow (follow redirect)",
         description: "请求 .html 文件触发 clean URL 重定向，follow 模式应跟随并返回 200",
+        finalUrl: resp.url,
         status: resp.status,
         headers: respHeaders,
         contentType: resp.headers.get("content-type"),
