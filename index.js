@@ -17,19 +17,44 @@ function headersToObj(headers) {
 // 从响应头提取实际回源信息
 function getOriginInfo(headers) {
   const info = {
-    originHost: headers.get("x-debug-dprs-origin-host") || null,
-    originScheme: headers.get("x-debug-dprs-origin-scheme") || null,
+    originHost: null,
+    originScheme: null,
     originPath: null
   };
-  // 解码 OSS canonical request 提取实际路径
-  const canonical = headers.get("x-debug-dprs-oss-canonical-request");
-  if (canonical) {
-    try {
-      const decoded = atob(canonical);
-      const lines = decoded.split("\n");
-      if (lines.length >= 2) info.originPath = lines[1].trim();
-    } catch (e) { /* ignore */ }
+
+  // 1. 从 x-site-origin-log-info 提取回源域名和协议
+  // 格式: "2||none||22||-1||61||-||304||cdn-edgejs.oss-cn-hangzhou.aliyuncs.com||39.173.43.137:80||..."
+  const originLog = headers.get("x-site-origin-log-info");
+  if (originLog) {
+    const parts = originLog.split("||");
+    if (parts.length >= 8) info.originHost = parts[7] || null;
   }
+
+  // 2. 从 dyconf-site-cache-key 提取实际 OSS 资源路径
+  // 格式: "http://sp-rwa-oss.aliyun-esa.com-alicdnsite-xxx/sp_esa_rwa/.../assets/404.html"
+  const cacheKey = headers.get("dyconf-site-cache-key");
+  if (cacheKey) {
+    // 取最后一个 /assets/ 之后的路径
+    const assetsIdx = cacheKey.lastIndexOf("/assets/");
+    if (assetsIdx !== -1) info.originPath = cacheKey.substring(assetsIdx);
+    // 提取协议
+    info.originScheme = cacheKey.startsWith("https://") ? "https" : "http";
+  }
+
+  // 3. 兼容 x-debug-dprs-* 头（主请求路径）
+  if (!info.originHost) info.originHost = headers.get("x-debug-dprs-origin-host") || null;
+  if (!info.originScheme) info.originScheme = headers.get("x-debug-dprs-origin-scheme") || null;
+  if (!info.originPath) {
+    const canonical = headers.get("x-debug-dprs-oss-canonical-request");
+    if (canonical) {
+      try {
+        const decoded = atob(canonical);
+        const lines = decoded.split("\n");
+        if (lines.length >= 2) info.originPath = lines[1].trim();
+      } catch (e) { /* ignore */ }
+    }
+  }
+
   return info;
 }
 
