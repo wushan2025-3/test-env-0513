@@ -22,23 +22,32 @@ function getOriginInfo(headers) {
     originPath: null
   };
 
-  // 1. 从 x-site-origin-log-info 提取回源域名和协议
-  // 格式: "2||none||22||-1||61||-||304||cdn-edgejs.oss-cn-hangzhou.aliyuncs.com||39.173.43.137:80||..."
+  // 1. 从 x-site-origin-log-info 提取回源域名、协议
+  // 格式: "2||TLSv1.2||86||58||135||-||200||cdn-edgejs.oss-cn-hangzhou.aliyuncs.com||39.173.43.137:443||..."
+  //   parts[1] = TLS 信息（TLSv1.2/TLSv1.3 表示 HTTPS，none 表示 HTTP）
+  //   parts[7] = 回源域名
+  //   parts[8] = IP:port（443=HTTPS，80=HTTP）
   const originLog = headers.get("x-site-origin-log-info");
   if (originLog) {
     const parts = originLog.split("||");
     if (parts.length >= 8) info.originHost = parts[7] || null;
+    // 优先用 TLS 信息判断协议
+    if (parts.length >= 2 && parts[1] && parts[1] !== "none" && parts[1].startsWith("TLS")) {
+      info.originScheme = "https";
+    } else if (parts.length >= 9 && parts[8] && parts[8].endsWith(":80")) {
+      info.originScheme = "http";
+    } else if (parts.length >= 9 && parts[8] && parts[8].endsWith(":443")) {
+      info.originScheme = "https";
+    }
   }
 
-  // 2. 从 dyconf-site-cache-key 提取实际 OSS 资源路径
+  // 2. 从 dyconf-site-cache-key 提取实际 OSS 资源路径（协议已由步骤1处理）
   // 格式: "http://sp-rwa-oss.aliyun-esa.com-alicdnsite-xxx/sp_esa_rwa/.../assets/404.html"
   const cacheKey = headers.get("dyconf-site-cache-key");
   if (cacheKey) {
-    // 取最后一个 /assets/ 之后的路径
     const assetsIdx = cacheKey.lastIndexOf("/assets/");
     if (assetsIdx !== -1) info.originPath = cacheKey.substring(assetsIdx);
-    // 提取协议
-    info.originScheme = cacheKey.startsWith("https://") ? "https" : "http";
+    if (!info.originScheme) info.originScheme = cacheKey.startsWith("https://") ? "https" : "http";
   }
 
   // 3. 兼容 x-debug-dprs-* 头（主请求路径）
