@@ -170,8 +170,8 @@ export default {
 
     // ===== etag: If-None-Match ETag 匹配 =====
     if (testCase === "etag") {
-      const testUrl1 = "https://xxx.er.xxxtest.alicdn-test.com/test.txt?_dyc=1";
-      const testUrl2 = "http://xxx.er.xxxtest.alicdn-test.com/test.txt?_dyc=1";
+      const testUrl1 = "https://xxx.er.xxxtest.alicdn-test.com/abc?_dyc=1";
+      const testUrl2 = "http://other.com/sub?_dyc=1";
       // 先 fetch 资源拿真实 ETag
       const r1 = await env.Assets.fetch(testUrl1);
       const realEtag = r1.headers.get("etag") || "";
@@ -200,7 +200,7 @@ export default {
 
     // ===== manual: redirect manual 不跟随重定向 =====
     if (testCase === "manual") {
-      const resp = await env.Assets.fetch("https://other.com/sub?_dyc=1", {
+      const resp = await env.Assets.fetch("http://other.com/sub?_dyc=1", {
         redirect: "manual"
       });
       const respHeaders = headersToObj(resp.headers);
