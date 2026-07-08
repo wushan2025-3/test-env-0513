@@ -64,8 +64,8 @@ export default {
 
     // ===== 404: Sec-Fetch-Mode: navigate 触发 SPA 兜底 =====
     if (testCase === "404") {
-      const resp = await env.Assets.fetch("https://other.com/notf112v1ound.html?_dyc=1", {
-        headers: { "Sec-Fetch-Mode": "navigate" }
+      const resp = await env.Assets.fetch("182-92-154-134.alicdn-test.com/v2/files/hello.txt", {
+        headers: { "Sec-Fetch-Mode": "navigate"}
       });
       const text = await resp.text();
       const isEsaErrorPage = text.includes("error-page") || text.includes("__ESA_ERROR_PAGE_INFO");
