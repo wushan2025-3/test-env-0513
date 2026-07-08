@@ -6,6 +6,5 @@
  "assets": {
     "directory": "/src/assets",
     "notFoundStrategy": "SinglePageApplication"
-  },
-"edgeFunctionFirst": ["/api/er/*","/v2/files/*","!/api/beta/*"]
+  }
 }
