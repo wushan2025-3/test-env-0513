@@ -1,12 +1,8 @@
-// ESA EdgeWorker 子请求综合测试脚本
+// ESA EdgeWorker fetch host 覆盖测试脚本
 // 通过主请求自定义头 X-Test-Case 切换测试场景，部署一次即可覆盖所有用例
 //
 // 用法：curl -H 'X-Test-Case: <case>' 'http://域名/任意路径?_dyc=1' -x VIP:端口
-//   404      → SPA 兜底（not_found_handling）
-//   noetag   → If-None-Match ETag 不匹配 → 期望 200
-//   etag     → If-None-Match ETag 匹配   → 期望 304
-//   manual   → redirect: manual 不跟随重定向 → 期望 307
-//   follow   → redirect: follow 跟随重定向   → 期望 200
+//   http第三方域名源站1  → fetch http://testcdn.1.alicdn-test.com + host: other.er.xxxtest.alicdn-test.com
 
 function headersToObj(headers) {
   const obj = {};
@@ -62,58 +58,29 @@ export default {
   async fetch(request, context, env) {
     const testCase = request.headers.get("X-Test-Case") || "default";
 
-    // ===== 404: Sec-Fetch-Mode: navigate 触发 SPA 兜底 =====
-    if (testCase === "404") {
-      const resp = await fetch("https://testcdn.207.alicdn-test.com/v2/files/hello.txt", {
-        headers: { "Sec-Fetch-Mode": "navigate"}
+
+
+    // ===== http第三方域名源站1+esa域名2: fetch http 第三方域名 + host 覆盖 =====
+    if (testCase === "http第三方域名源站1+esa域名2") {
+      const subUrl = "http://testcdn.1.alicdn-test.com/v2/files/hello_er.txt";
+      const overrideHost = "other.er.xxxtest.alicdn-test.com";
+      const resp = await fetch(subUrl, {
+        host: overrideHost
       });
       const text = await resp.text();
-      const isEsaErrorPage = text.includes("error-page") || text.includes("__ESA_ERROR_PAGE_INFO");
-      const isIndexHtml = !isEsaErrorPage && (text.includes("<!DOCTYPE") || text.includes("<html"));
       const respHeaders = headersToObj(resp.headers);
       const originInfo = getOriginInfo(resp.headers);
-      console.log("[404] sub-request finalUrl:", resp.url, "originInfo:", JSON.stringify(originInfo));
+      console.log("[http第三方域名源站1] subUrl:", subUrl, "host:", overrideHost, "finalUrl:", resp.url, "originInfo:", JSON.stringify(originInfo));
       return new Response(JSON.stringify({
-        test: "Sec-Fetch-Mode: navigate → SPA fallback",
-        description: "子请求携带 Sec-Fetch-Mode: navigate 请求不存在的路径，验证是否触发 SPA 兜底返回 index.html",
+        test: "http第三方域名源站1",
+        description: "子请求 http://testcdn.1.alicdn-test.com/v2/files/hello_er.txt + host: other.er.xxxtest.alicdn-test.com",
+        subRequestUrl: subUrl,
+        hostOverride: overrideHost,
         finalUrl: resp.url,
         originInfo,
         status: resp.status,
         headers: respHeaders,
-        contentType: resp.headers.get("content-type"),
-        isIndexHtml,
-        isEsaErrorPage,
         body: text.substring(0, 500)
-      }, null, 2), { headers: { "content-type": "application/json" } });
-    }
-
-    // ===== etag: If-None-Match ETag 匹配 =====
-    if (testCase === "etag") {
-      const testUrl1 = "http://xxx.er.xxxtest.alicdn-test.com/test.txt?_dyc=1";
-      const testUrl2 = "https://other.com/test.txt?_dyc=1";
-      // 先 fetch 资源拿真实 ETag
-      const r1 = await env.Assets.fetch(testUrl1);
-      const realEtag = r1.headers.get("etag") || "";
-      // 用真实 ETag 再次请求
-      const r2 = await env.Assets.fetch(testUrl2, {
-        headers: { "If-None-Match": realEtag }
-      });
-      const r2Headers = headersToObj(r2.headers);
-      const r1Origin = getOriginInfo(r1.headers);
-      const r2Origin = getOriginInfo(r2.headers);
-      console.log("[etag] r1 finalUrl:", r1.url, "r1Origin:", JSON.stringify(r1Origin), "r2 finalUrl:", r2.url, "r2Origin:", JSON.stringify(r2Origin));
-      return new Response(JSON.stringify({
-        test: "If-None-Match ETag match",
-        description: "先子请求获取真实 ETag，再用它发起请求，期望返回 304",
-        r1FinalUrl: r1.url,
-        r1OriginInfo: r1Origin,
-        r2FinalUrl: r2.url,
-        r2OriginInfo: r2Origin,
-        realEtag: realEtag,
-        status: r2.status,
-        headers: r2Headers,
-        contentType: r2.headers.get("content-type"),
-        pass: r2.status === 304
       }, null, 2), { headers: { "content-type": "application/json" } });
     }
 
@@ -121,7 +88,7 @@ export default {
     return new Response(JSON.stringify({
       test: "unknown or missing X-Test-Case",
       description: "请在 curl 中通过 -H 'X-Test-Case: <case>' 指定测试场景",
-      availableCases: ["404", "noetag", "etag", "manual", "follow"],
+      availableCases: ["http第三方域名源站1"],
       received: testCase
     }, null, 2), { headers: { "content-type": "application/json" } });
   },
