@@ -84,6 +84,33 @@ export default {
       }, null, 2), { headers: { "content-type": "application/json" } });
     }
 
+    // ===== https第三方域名源站1+esa域名2: fetch https 第三方域名 + host 覆盖 =====
+    if (testCase === "https_3rd_origin1_esa2") {
+      const subUrl = "https://testcdn.1.alicdn-test.com/v2/files/hello_er.txt";
+      const overrideHost = "other.er.xxxtest.alicdn-test.com";
+      const resp = await fetch(subUrl, {
+        host: overrideHost
+      });
+      const text = await resp.text();
+      const respHeaders = headersToObj(resp.headers);
+      const originInfo = getOriginInfo(resp.headers);
+      console.log("[http_3rd_origin1_esa2] subUrl:", subUrl, "host:", overrideHost, "finalUrl:", resp.url, "originInfo:", JSON.stringify(originInfo));
+      return new Response(JSON.stringify({
+        test: "http_3rd_origin1_esa2",
+        description: "子请求 https://testcdn.1.alicdn-test.com/v2/files/hello_er.txt + host: other.er.xxxtest.alicdn-test.com",
+        subRequestUrl: subUrl,
+        hostOverride: overrideHost,
+        finalUrl: resp.url,
+        originInfo,
+        status: resp.status,
+        headers: respHeaders,
+        body: text.substring(0, 500)
+      }, null, 2), { headers: { "content-type": "application/json" } });
+    }
+
+
+    
+
     // ===== default: 未匹配到任何测试场景 =====
     return new Response(JSON.stringify({
       test: "unknown or missing X-Test-Case",
