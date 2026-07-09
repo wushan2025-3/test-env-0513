@@ -2,7 +2,7 @@
 // 通过主请求自定义头 X-Test-Case 切换测试场景，部署一次即可覆盖所有用例
 //
 // 用法：curl -H 'X-Test-Case: <case>' 'http://域名/任意路径?_dyc=1' -x VIP:端口
-//   http第三方域名源站1  → fetch http://testcdn.1.alicdn-test.com + host: other.er.xxxtest.alicdn-test.com
+//   http第三方域名源站1+esa域名2  → fetch http://testcdn.1.alicdn-test.com + host: other.er.xxxtest.alicdn-test.com
 
 function headersToObj(headers) {
   const obj = {};
@@ -70,9 +70,9 @@ export default {
       const text = await resp.text();
       const respHeaders = headersToObj(resp.headers);
       const originInfo = getOriginInfo(resp.headers);
-      console.log("[http第三方域名源站1] subUrl:", subUrl, "host:", overrideHost, "finalUrl:", resp.url, "originInfo:", JSON.stringify(originInfo));
+      console.log("[http第三方域名源站1+esa域名2] subUrl:", subUrl, "host:", overrideHost, "finalUrl:", resp.url, "originInfo:", JSON.stringify(originInfo));
       return new Response(JSON.stringify({
-        test: "http第三方域名源站1",
+        test: "http第三方域名源站1+esa域名2",
         description: "子请求 http://testcdn.1.alicdn-test.com/v2/files/hello_er.txt + host: other.er.xxxtest.alicdn-test.com",
         subRequestUrl: subUrl,
         hostOverride: overrideHost,
@@ -88,7 +88,7 @@ export default {
     return new Response(JSON.stringify({
       test: "unknown or missing X-Test-Case",
       description: "请在 curl 中通过 -H 'X-Test-Case: <case>' 指定测试场景",
-      availableCases: ["http第三方域名源站1"],
+      availableCases: ["http第三方域名源站1+esa域名2"],
       received: testCase
     }, null, 2), { headers: { "content-type": "application/json" } });
   },
