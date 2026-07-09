@@ -62,8 +62,8 @@ export default {
 
     // ===== http第三方域名源站1+esa域名2: fetch http 第三方域名 + host 覆盖 =====
     if (testCase === "http_3rd_origin1_esa2") {
-      const subUrl = "http://testcdn.1.alicdn-test.com/v2/files/hello_er.txt";
-      const overrideHost = "other.er.xxxtest.alicdn-test.com";
+      const subUrl = "http://other.er.xxxtest.alicdn-test.com/v2/files/hello_er.txt";
+      const overrideHost = "realcert.alicdn-test.com";
       const resp = await fetch(subUrl, {
         host: overrideHost
       });
