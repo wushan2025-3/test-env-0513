@@ -10,8 +10,8 @@ function headersToObj(headers) {
 export default {
   async fetch(request, context, env) {
     const url = new URL(request.url);
-    const subUrl = url.searchParams.get("subUrl") || "http://xxx.er.xxxtest.alicdn-test.com/v2/files/hello_er.txt";
-    const overrideHost = url.searchParams.get("host") || "xxx.er.xxxtest.alicdn-test.com";
+    const subUrl = url.searchParams.get("subUrl") || "http://xxssx.er.xxxtest.alicdn-test.com/v2/files/hello_er.txt";
+    const overrideHost = url.searchParams.get("host") || "xxssx.er.xxxtest.alicdn-test.com";
 
     const fetchOpts = {};
     if (overrideHost) fetchOpts.host = overrideHost;
