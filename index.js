@@ -1,18 +1,34 @@
-const html = `<!DOCTYPE html>
-<body>
-  <h1>Hello World测试的edge function</h1>
-</body>`
+// ESA EdgeWorker 最简子请求测试脚本
+// 用法：curl 'http://域名/er.js?_dyc=1&subUrl=<子请求URL>&host=<覆盖host>' -x VIP:PORT
 
-async function handleRequest(request) {
-  return new Response(html, {
-    headers: {
-      "content-type": "text/html;charset=UTF-8",
-    },
-  })
+function headersToObj(headers) {
+  const obj = {};
+  for (const [k, v] of headers.entries()) obj[k] = v;
+  return obj;
 }
 
 export default {
-  async fetch(request) {
-    return handleRequest(request);
-  }
+  async fetch(request, context, env) {
+    const url = new URL(request.url);
+    const subUrl = url.searchParams.get("subUrl") || "http://other.er.xxxtest.alicdn-test.com/v2/files/hello_er.txt";
+    const overrideHost = url.searchParams.get("host") || "xxx.er.xxxtest.alicdn-test.com";
+
+    const fetchOpts = {};
+    if (overrideHost) fetchOpts.host = overrideHost;
+
+    const resp = await fetch(subUrl, fetchOpts);
+    const text = await resp.text();
+    const respHeaders = headersToObj(resp.headers);
+
+    console.log("[sub] subUrl:", subUrl, "host:", overrideHost, "finalUrl:", resp.url);
+
+    return new Response(JSON.stringify({
+      subUrl,
+      hostOverride: overrideHost,
+      finalUrl: resp.url,
+      status: resp.status,
+      headers: respHeaders,
+      body: text.substring(0, 500)
+    }, null, 2), { headers: { "content-type": "application/json" } });
+  },
 };
