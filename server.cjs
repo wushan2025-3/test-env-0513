@@ -4,7 +4,7 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
-app.get('/api/health', (req, res) => res.json({ ok: true, runtime: 'backend' }));
+app.get('/v2/files', (req, res) => res.json({ ok: true, runtime: 'backend' }));
 
 app.get('/api/users/:id', (req, res) => {
   res.json({ user: req.params.id, source: 'express' });
