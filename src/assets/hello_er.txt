@@ -1,1 +1,1 @@
-js返回静态文件hello_er
+anycast3.xxxtest.alicdn-test.com,js返回静态文件hello_er
