@@ -4,11 +4,14 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
-app.get('/v2/files', (req, res) => res.json({ ok: true, runtime: 'backend' }));
+app.get('/v2/files/hello_er.txt', (req, res) => res.json({ ok: true, runtime: '静态资源走efc！！！！' }));
 
 app.get('/api/users/:id', (req, res) => {
   res.json({ user: req.params.id, source: 'express' });
 });
+
+// 设置静态文件目录
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/api/echo', (req, res) => {
   res.json({ received: req.body });
