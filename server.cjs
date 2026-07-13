@@ -4,7 +4,7 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
-app.get('/v2/files/hello_er.txt', (req, res) => res.json({ ok: true, runtime: '静态资源走efc！！！！' }));
+app.get('/v3/files/hello_er.txt', (req, res) => res.json({ ok: true, runtime: '静态资源走efc！！！！' }));
 
 app.get('/api/users/:id', (req, res) => {
   res.json({ user: req.params.id, source: 'express' });
