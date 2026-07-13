@@ -10,9 +10,6 @@ app.get('/api/users/:id', (req, res) => {
   res.json({ user: req.params.id, source: 'express' });
 });
 
-// 设置静态文件目录
-app.use(express.static(path.join(__dirname, 'public')));
-
 app.post('/api/echo', (req, res) => {
   res.json({ received: req.body });
 });
