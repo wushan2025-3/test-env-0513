@@ -15,7 +15,7 @@ export default {
 
     const fetchOpts = {};
     if (overrideHost) fetchOpts.host = overrideHost;
-
+    fetchOpts.redirect = "manual";
     const resp = await fetch(subUrl, fetchOpts);
     const text = await resp.text();
     const respHeaders = headersToObj(resp.headers);
