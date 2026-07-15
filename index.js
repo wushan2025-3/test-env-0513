@@ -1,26 +1,8 @@
-// ESA EdgeWorker 最简子请求测试脚本
-// 直接 fetch 主请求 URL，无需任何自定义头或参数
-
-function headersToObj(headers) {
-  const obj = {};
-  for (const [k, v] of headers.entries()) obj[k] = v;
-  return obj;
-}
-
+// ESA EdgeWorker 子请求脚本 - 直接返回固定文本
 export default {
   async fetch(request, context, env) {
-    const resp = await fetch(request.url);
-    const text = await resp.text();
-    const respHeaders = headersToObj(resp.headers);
-
-    console.log("[sub] url:", request.url, "finalUrl:", resp.url);
-
-    return new Response(JSON.stringify({
-      requestUrl: request.url,
-      finalUrl: resp.url,
-      status: resp.status,
-      headers: respHeaders,
-      body: text.substring(0, 500)
-    }, null, 2), { headers: { "content-type": "application/json" } });
+    return new Response("走two.anycast3.xxxtest.alicdn-test.com的ew2了！！！！", {
+      headers: { "content-type": "text/plain; charset=utf-8" }
+    });
   },
 };
