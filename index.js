@@ -13,9 +13,8 @@ export default {
     const subUrl = url.searchParams.get("subUrl") || "https://other.er.xxxtest.alicdn-test.com/hello_er.txt";
     const overrideHost = url.searchParams.get("host") || "two.anycast3.xxxtest.alicdn-test.com";
 
-    const fetchOpts = {};
+    const fetchOpts = { redirect: "manual" };
     if (overrideHost) fetchOpts.host = overrideHost;
-    fetchOpts.redirect = "manual";
     const resp = await fetch(subUrl, fetchOpts);
     const text = await resp.text();
     const respHeaders = headersToObj(resp.headers);
