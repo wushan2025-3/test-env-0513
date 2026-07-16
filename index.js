@@ -27,7 +27,7 @@ export default {
       finalUrl: resp.url,
       status: resp.status,
       headers: respHeaders,
-      body: text.substring(0, 500)
+      body: text.substring(0, 500) + "走子请求的ew2了！！！！"
     }, null, 2), { headers: { "content-type": "application/json" } });
   },
 };
