@@ -11,7 +11,7 @@ export default {
   async fetch(request, context, env) {
     const url = new URL(request.url);
     const subUrl = url.searchParams.get("subUrl") || "http://xxx.er.xxxtest.alicdn-test.com/v2/files/hello_er.txt";
-    const overrideHost = url.searchParams.get("host") || "two.anycast3.xxxtest.alicdn-test.com";
+    const overrideHost = url.searchParams.get("host") || "realcert.alicdn-test.com";
 
     const fetchOpts = { redirect: "manual" };
     if (overrideHost) fetchOpts.host = overrideHost;
